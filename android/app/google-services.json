@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "435556032700",
+    "project_id": "cutalkproj",
+    "storage_bucket": "cutalkproj.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:435556032700:android:356276928a0d117571f0b9",
+        "android_client_info": {
+          "package_name": "com.korayliman.cutalk"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "435556032700-94nbqkt74erkqrtqegdfe4ovcnhusvl0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.korayliman.cutalk",
+            "certificate_hash": "542f0f7ba0ad091c56e687e5c22f6824835d2405"
+          }
+        },
+        {
+          "client_id": "435556032700-u7qjsivi9vf8g5ar8oksq7o3kr00thnh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDYpYN7BSJt6_hB-uSoZ6xMkpAANKcpVzI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "435556032700-u7qjsivi9vf8g5ar8oksq7o3kr00thnh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "435556032700-kkauqbubaq7doivojc64krt27r696f4j.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.korayliman.cutalk"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
