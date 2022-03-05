@@ -1,4 +1,5 @@
 import 'package:cutalk/firebase_options.dart';
+import 'package:cutalk/pages/Homepage.dart';
 import 'package:cutalk/pages/Talk_Page.dart';
 import 'package:cutalk/pages/login_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'CuTalk',
-      home: RegisterScreen(),
+      home: HomePage(),
     );
   }
 }
