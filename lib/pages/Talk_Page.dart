@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cutalk/models/Talkmodel.dart';
 import 'package:cutalk/pages/Content_page.dart';
 
 import 'package:cutalk/pages/login_page.dart';
@@ -9,6 +10,8 @@ import 'package:intl/intl.dart';
 
 class TalkPage extends StatefulWidget {
   const TalkPage({Key? key}) : super(key: key);
+
+
 
   @override
   State<TalkPage> createState() => _TalkPageState();
@@ -30,6 +33,12 @@ class _TalkPageState extends State<TalkPage> {
                         bottom: MediaQuery.of(context).viewInsets.bottom),
                     child: ListTile(
                       title: TextFormField(
+                        onFieldSubmitted: (value) {
+                         var newTalk = Talk.create(user: , Content: Content, Ownerid: FirebaseAuth.instance.currentUser?.uid)
+                          Navigator.pop(context);
+                        },
+                        decoration: InputDecoration(
+                            hintText: "Konuşmanızı buraya yazınız"),
                         autofocus: true,
                       ),
                     ),
@@ -44,7 +53,7 @@ class _TalkPageState extends State<TalkPage> {
         body: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection("talk")
-              .orderBy("timestamp", descending: false)
+              .orderBy("timestamp", descending: true)
               .limit(100)
               .snapshots(),
           builder: (context, snapshot) {
@@ -59,41 +68,61 @@ class _TalkPageState extends State<TalkPage> {
             } else {
               var docs = snapshot.data!.docs;
               return ListView.builder(
+                  itemExtent: 120,
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
                     Timestamp t = docs[index]["timestamp"];
                     return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 4),
-                        child: ListTile(
-                          // trailing: DefaultTextStyle.merge(
-                          //     child: Text(formatter.format(
-                          //         DateTime.fromMillisecondsSinceEpoch(
-                          //             docs[index]["timestamp"])))),
-                          title: Text(
-                            docs[index]["content"],
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 2,
-                            style: TextStyle(fontSize: 18),
-                          ),
+                      padding:
+                          const EdgeInsets.only(top: 12.0, right: 10, left: 10),
+                      child: Card(
+                        elevation: 8,
+                        child: Stack(
+                          children: [
+                            ListTile(
+                              contentPadding:
+                                  EdgeInsets.only(top: 20, bottom: 10, left: 5),
+                              leading:
+                                  Image.asset("assets/images/discussion.png"),
+                              // trailing: DefaultTextStyle.merge(
+                              //     child: Text(formatter.format(
+                              //         DateTime.fromMillisecondsSinceEpoch(
+                              //             docs[index]["timestamp"])))),
+                              title: Text(
+                                docs[index]["content"],
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 2,
+                                style: TextStyle(fontSize: 18),
+                              ),
 
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6)),
-                          tileColor: Colors.grey.shade200.withOpacity(0.7),
-                          trailing: Icon(Icons.arrow_forward_ios),
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: ((context) => ContentPage(
-                                        Content: docs[index]["content"],
-                                        ImagePath: docs[index]["imagepath"]))));
-                          },
-                          // DefaultTextStyle.merge(
-                          //     child: Text(formatter.format(
-                          //         DateTime.fromMillisecondsSinceEpoch(
-                          //             t.toDate().millisecondsSinceEpoch)))),
-                        ));
+                              trailing: Icon(Icons.arrow_forward_ios),
+                              onTap: () {
+                                // Navigator.push(
+                                //     context,
+                                //     MaterialPageRoute(
+                                //         builder: ((context) => ContentPage(
+                                //             Content: docs[index]["content"],
+                                //             ImagePath: docs[index]
+                                //                 ["imagepath"]))));
+
+                                                
+                              },
+                            ),
+                            Align(
+                              alignment: Alignment.bottomRight,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: DefaultTextStyle.merge(
+                                    child: Text(formatter.format(
+                                        DateTime.fromMillisecondsSinceEpoch(t
+                                            .toDate()
+                                            .millisecondsSinceEpoch)))),
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    );
                   });
             }
           },
@@ -110,17 +139,6 @@ class _TalkPageState extends State<TalkPage> {
 
 
 
-// TextButton(
-//             onPressed: () async {
-//               if (GoogleSignIn().currentUser != null) {}
-//               await GoogleSignIn().disconnect();
-//               await FirebaseAuth.instance.signOut();
-//               Navigator.pushAndRemoveUntil(
-//                   context,
-//                   MaterialPageRoute(builder: ((context) => LoginPage())),
-//                   (route) => false);
-//             },
-//             child: const Text("SignOut"))
 
 // Scaffold(
 //       body: Center(

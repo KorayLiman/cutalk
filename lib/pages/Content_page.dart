@@ -1,11 +1,12 @@
+import 'package:cutalk/models/Talkmodel.dart';
+import 'package:cutalk/models/Usermodel.dart';
 import 'package:flutter/material.dart';
 
 class ContentPage extends StatefulWidget {
-  ContentPage({Key? key, required this.Content, required this.ImagePath})
-      : super(key: key);
+  ContentPage({Key? key, required this.talk,required this.user}) : super(key: key);
 
-  String? Content;
-  String? ImagePath;
+  Talk? talk;
+  UserP? user;
   @override
   State<ContentPage> createState() => _ContentPageState();
 }

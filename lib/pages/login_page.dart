@@ -4,6 +4,8 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:clippy_flutter/arc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cutalk/FirestoreOperations.dart';
+import 'package:cutalk/models/Usermodel.dart';
+import 'package:cutalk/pages/Homepage.dart';
 import 'package:cutalk/pages/Talk_Page.dart';
 import 'package:cutalk/pages/signup_page.dart';
 import 'package:email_validator/email_validator.dart';
@@ -11,6 +13,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterfire_ui/auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:uuid/uuid.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -23,6 +26,8 @@ class _LoginPageState extends State<LoginPage> {
   //final EmailController = TextEditingController();
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   StreamSubscription? _UserSubscribe;
+  late UserP user;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -121,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
                               Navigator.pushAndRemoveUntil(
                                   context,
                                   MaterialPageRoute(
-                                      builder: ((context) => TalkPage())),
+                                      builder: ((context) => HomePage())),
                                   (route) => false);
                             },
                             icon: Image.asset(
@@ -129,7 +134,6 @@ class _LoginPageState extends State<LoginPage> {
                               scale: 5,
                             ),
                             label: const Text("Google ile giriş yap")),
-                            GoogleSignInIconButton(clientId: "test",)
                       ],
                     ),
                     ElevatedButton(
@@ -183,18 +187,25 @@ class _LoginPageState extends State<LoginPage> {
         .then((QuerySnapshot querySnapshot) {
       bool DoesExist = false;
       querySnapshot.docs.forEach((doc) {
-        if (doc["name"] == googleUser!.displayName) {
+        if (doc["email"] == googleUser!.email) {
           DoesExist = true;
         }
       });
       if (DoesExist == false) {
-        FirestoreOperations.AddUser(googleUser!);
+        //FirestoreOperations.AddUser(googleUser!);
+        var uuid = Uuid().v1();
+        var name = googleUser?.displayName!;
+        var email = googleUser?.email!;
+        var imagepath = "assets/images/cu.png";
+        user = UserP(id: uuid, name: name, imagepath: imagepath, email: email);
+        _firestore
+            .collection("user")
+            .add({"id": uuid, "name": name, "imagepath": imagepath, "email":email});
       }
     });
     //print(googleUser!.displayName);
 
-    Navigator.push(
-        context, MaterialPageRoute(builder: ((context) => TalkPage())));
+   
     // Once signed in, return the UserCredential
     return await FirebaseAuth.instance.signInWithCredential(credential);
   }

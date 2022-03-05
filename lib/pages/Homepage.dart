@@ -1,3 +1,4 @@
+import 'package:cutalk/pages/Landing_page.dart';
 import 'package:cutalk/pages/Talk_Page.dart';
 import 'package:flutter/material.dart';
 
@@ -38,7 +39,7 @@ class _HomePageState extends State<HomePage>
       ),
       body: TabBarView(
           controller: _tabController,
-          children: [Container(), TalkPage(), Container()]),
+          children: [LandingPage(), TalkPage(), Container()]),
     );
   }
 }

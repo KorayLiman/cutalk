@@ -17,9 +17,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+          appBarTheme: AppBarTheme(color: Colors.blue.shade800),
+          scaffoldBackgroundColor: Colors.grey.shade200),
       title: 'CuTalk',
-      home: HomePage(),
+      home:
+          FirebaseAuth.instance.currentUser == null ? LoginPage() : HomePage(),
     );
   }
 }
-// FirebaseAuth.instance.currentUser == null ? LoginPage() : TalkPage(),
