@@ -1,5 +1,5 @@
 class Talk {
-  String Title;
-  String Content;
-  
+  // String Title;
+  // String Content;
+
 }

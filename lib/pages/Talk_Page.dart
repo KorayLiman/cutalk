@@ -14,7 +14,7 @@ class TalkPage extends StatefulWidget {
 }
 
 class _TalkPageState extends State<TalkPage> {
-  final DateFormat formatter = DateFormat('MM/dd HH:mm:SS');
+  final DateFormat formatter = DateFormat('dd/MM/yyyy');
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +29,7 @@ class _TalkPageState extends State<TalkPage> {
         body: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance
               .collection("talk")
-              .orderBy("timestamp", descending: true)
+              .orderBy("timestamp", descending: false)
               .limit(100)
               .snapshots(),
           builder: (context, snapshot) {
@@ -46,20 +46,24 @@ class _TalkPageState extends State<TalkPage> {
               return ListView.builder(
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
+                    Timestamp t = docs[index]["timestamp"];
                     return Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8.0, vertical: 4),
-                      child: ListTile(
-                        // trailing: DefaultTextStyle.merge(
-                        //     child: Text(formatter.format(
-                        //         DateTime.fromMillisecondsSinceEpoch(
-                        //             docs[index]["timestamp"])))),
-                        title: Text(docs[index]["Title"]),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        tileColor: Colors.grey.shade300,
-                      ),
-                    );
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 4),
+                        child: ListTile(
+                          // trailing: DefaultTextStyle.merge(
+                          //     child: Text(formatter.format(
+                          //         DateTime.fromMillisecondsSinceEpoch(
+                          //             docs[index]["timestamp"])))),
+                          title: Text(docs[index]["Title"]),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          tileColor: Colors.grey.shade300,
+                          trailing: DefaultTextStyle.merge(
+                              child: Text(formatter.format(
+                                  DateTime.fromMillisecondsSinceEpoch(
+                                      t.toDate().millisecondsSinceEpoch)))),
+                        ));
                   });
             }
           },
