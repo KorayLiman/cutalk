@@ -37,11 +37,9 @@ class _TalkPageState extends State<TalkPage> {
                             var newTalk = Talk.create(
                                 Content: value,
                                 timestamp: DateTime.now(),
-                                
                                 Ownerid:
                                     FirebaseAuth.instance.currentUser?.uid);
-                           
-                            
+
                             print(FirebaseAuth.instance.currentUser?.uid);
                             FirebaseFirestore.instance.collection("talk").add({
                               "content": newTalk.Content,
@@ -144,6 +142,23 @@ class _TalkPageState extends State<TalkPage> {
                                           PopupMenuItem(
                                               child: TextButton.icon(
                                                   onPressed: () async {
+                                                    QuerySnapshot<
+                                                            Map<String,
+                                                                dynamic>> snp =
+                                                        await FirebaseFirestore
+                                                            .instance
+                                                            .collection(
+                                                                "comments")
+                                                            .where("ownerid",
+                                                                isEqualTo:
+                                                                    docs[index]
+                                                                        .id)
+                                                            .get();
+                                                    snp.docs.forEach((element) {
+                                                      element.reference
+                                                          .delete();
+                                                    });
+
                                                     await FirebaseFirestore
                                                         .instance
                                                         .runTransaction((Transaction

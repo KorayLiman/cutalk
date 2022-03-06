@@ -154,7 +154,7 @@ class _ContentPageState extends State<ContentPage> {
                               var er = snapshot.error.toString;
                               print(er);
                               return Center(
-                                  child: Text(snapshot.error.toString()));
+                                  child: Text(""));
                             } else if (!snapshot.hasData) {
                               return Center(
                                 child: CircularProgressIndicator(),
