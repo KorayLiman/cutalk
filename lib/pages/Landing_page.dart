@@ -9,18 +9,21 @@ class LandingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Center(
-      child: TextButton(
-          onPressed: () async {
-            if (GoogleSignIn().currentUser != null) {}
-            await GoogleSignIn().disconnect();
-            await FirebaseAuth.instance.signOut();
-            Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: ((context) => LoginPage())),
-                (route) => false);
-          },
-          child: const Text("SignOut")),
-    ));
+      body: Column(
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          Expanded(
+            child: Container(
+              alignment: Alignment.center,
+              child: const Text("HOŞ GELDİN CUMHURİYET ÜNİVERSİTELİ!!!"),
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Container(),
+          )
+        ],
+      ),
+    );
   }
 }

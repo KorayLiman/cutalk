@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cutalk/models/Talkmodel.dart';
 import 'package:cutalk/pages/Content_page.dart';
 
@@ -10,8 +11,6 @@ import 'package:intl/intl.dart';
 
 class TalkPage extends StatefulWidget {
   const TalkPage({Key? key}) : super(key: key);
-
-
 
   @override
   State<TalkPage> createState() => _TalkPageState();
@@ -34,8 +33,21 @@ class _TalkPageState extends State<TalkPage> {
                     child: ListTile(
                       title: TextFormField(
                         onFieldSubmitted: (value) {
-                         var newTalk = Talk.create(user: , Content: Content, Ownerid: FirebaseAuth.instance.currentUser?.uid)
-                          Navigator.pop(context);
+                          if (value.length > 0) {
+                            var newTalk = Talk.create(
+                                Content: value,
+                                Ownerid:
+                                    FirebaseAuth.instance.currentUser?.uid);
+                            print(FirebaseAuth.instance.currentUser?.uid);
+                            FirebaseFirestore.instance.collection("talk").add({
+                              "content": newTalk.Content,
+                              "ownerid": newTalk.ownerid,
+                              "timestamp": DateTime.now()
+                            });
+                            Navigator.pop(context);
+                          } else {
+                            Navigator.pop(context);
+                          }
                         },
                         decoration: InputDecoration(
                             hintText: "Konuşmanızı buraya yazınız"),
@@ -76,6 +88,8 @@ class _TalkPageState extends State<TalkPage> {
                       padding:
                           const EdgeInsets.only(top: 12.0, right: 10, left: 10),
                       child: Card(
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18)),
                         elevation: 8,
                         child: Stack(
                           children: [
@@ -97,15 +111,52 @@ class _TalkPageState extends State<TalkPage> {
 
                               trailing: Icon(Icons.arrow_forward_ios),
                               onTap: () {
-                                // Navigator.push(
-                                //     context,
-                                //     MaterialPageRoute(
-                                //         builder: ((context) => ContentPage(
-                                //             Content: docs[index]["content"],
-                                //             ImagePath: docs[index]
-                                //                 ["imagepath"]))));
-
-                                                
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: ((context) => ContentPage(
+                                              content: docs[index]["content"],
+                                              userid: docs[index]["ownerid"],
+                                            ))));
+                              },
+                              onLongPress: () async {
+                                var connectivityResult =
+                                    await (Connectivity().checkConnectivity());
+                                if (connectivityResult ==
+                                        ConnectivityResult.mobile ||
+                                    connectivityResult ==
+                                        ConnectivityResult.wifi) {
+                                  if (docs[index]["ownerid"] ==
+                                      FirebaseAuth.instance.currentUser?.uid) {
+                                    showMenu(
+                                        context: context,
+                                        position: RelativeRect.fromLTRB(
+                                            0,
+                                            MediaQuery.of(context).size.height,
+                                            MediaQuery.of(context).size.width,
+                                            0),
+                                        items: [
+                                          PopupMenuItem(
+                                              child: TextButton.icon(
+                                                  onPressed: () async {
+                                                    await FirebaseFirestore
+                                                        .instance
+                                                        .runTransaction((Transaction
+                                                            myTransaction) async {
+                                                      await myTransaction
+                                                          .delete(snapshot
+                                                              .data!
+                                                              .docs[index]
+                                                              .reference);
+                                                      Navigator.pop(context);
+                                                    });
+                                                  },
+                                                  icon: Icon(Icons.delete),
+                                                  label: const Text(
+                                                      "Gönderiyi sil")))
+                                        ]);
+                                  }
+                                }
                               },
                             ),
                             Align(

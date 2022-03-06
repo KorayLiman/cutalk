@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:clippy_flutter/arc.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cutalk/FirestoreOperations.dart';
 import 'package:cutalk/models/Usermodel.dart';
 import 'package:cutalk/pages/Homepage.dart';
@@ -27,7 +28,8 @@ class _LoginPageState extends State<LoginPage> {
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
   StreamSubscription? _UserSubscribe;
   late UserP user;
-
+  late String password;
+  late String email;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,7 +78,10 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 48.0),
-                  child: TextFormField(
+                  child: TextFormField(keyboardType: TextInputType.emailAddress,
+                    onChanged: (value) {
+                      email = value;
+                    },
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: (input) {
                       if (!EmailValidator.validate(input!)) {
@@ -95,6 +100,9 @@ class _LoginPageState extends State<LoginPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 48.0),
                   child: TextFormField(
+                    onChanged: (value) {
+                      password = value;
+                    },
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: (input) {
                       if (input!.length < 6) {
@@ -116,18 +124,22 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         TextButton.icon(
-                          onPressed: () {},
+                          onPressed: () async {
+                            bool result = await UserLogin();
+                          },
                           icon: Icon(Icons.login),
                           label: const Text("Giriş Yap"),
                         ),
                         TextButton.icon(
                             onPressed: () async {
-                              await GoogleLogin();
-                              Navigator.pushAndRemoveUntil(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: ((context) => HomePage())),
-                                  (route) => false);
+                              bool result = await GoogleLogin();
+                              if (result) {
+                                Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: ((context) => HomePage())),
+                                    (route) => false);
+                              }
                             },
                             icon: Image.asset(
                               "assets/images/google.png",
@@ -170,43 +182,118 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Future<UserCredential> GoogleLogin() async {
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+  Future<bool> GoogleLogin() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi) {
+      try {
+        final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-    final GoogleSignInAuthentication? googleAuth =
-        await googleUser?.authentication;
+        final GoogleSignInAuthentication? googleAuth =
+            await googleUser?.authentication;
 
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth?.accessToken,
-      idToken: googleAuth?.idToken,
-    );
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth?.accessToken,
+          idToken: googleAuth?.idToken,
+        );
 
-    FirebaseFirestore.instance
-        .collection("user")
-        .get()
-        .then((QuerySnapshot querySnapshot) {
-      bool DoesExist = false;
-      querySnapshot.docs.forEach((doc) {
-        if (doc["email"] == googleUser!.email) {
-          DoesExist = true;
-        }
-      });
-      if (DoesExist == false) {
-        //FirestoreOperations.AddUser(googleUser!);
-        var uuid = Uuid().v1();
-        var name = googleUser?.displayName!;
-        var email = googleUser?.email!;
-        var imagepath = "assets/images/cu.png";
-        user = UserP(id: uuid, name: name, imagepath: imagepath, email: email);
-        _firestore
+        await FirebaseAuth.instance.signInWithCredential(credential);
+
+        FirebaseFirestore.instance
             .collection("user")
-            .add({"id": uuid, "name": name, "imagepath": imagepath, "email":email});
+            .get()
+            .then((QuerySnapshot querySnapshot) {
+          bool DoesExist = false;
+          querySnapshot.docs.forEach((doc) {
+            if (doc["email"] == googleUser!.email) {
+              DoesExist = true;
+            }
+          });
+          if (DoesExist == false) {
+            //FirestoreOperations.AddUser(googleUser!);
+            var uuid = Uuid().v1();
+            var name = googleUser?.displayName!;
+            var email = googleUser?.email!;
+            var imagepath = null;
+            user = UserP(
+                id: FirebaseAuth.instance.currentUser?.uid,
+                name: name,
+                imagepath: imagepath,
+                email: email,
+                password: null);
+            _firestore.collection("user").add({
+              "id": FirebaseAuth.instance.currentUser?.uid,
+              "name": name,
+              "imagepath": imagepath,
+              "email": email,
+              "password": null
+            });
+          }
+        });
+        return true;
+      } catch (error) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text("Bir hata meydana geldi"),
+              );
+            });
+        return false;
       }
-    });
+    } else {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("Lütfen internete bağlanın"),
+            );
+          });
+      return false;
+    }
+
     //print(googleUser!.displayName);
 
-   
     // Once signed in, return the UserCredential
-    return await FirebaseAuth.instance.signInWithCredential(credential);
+
+    print("email: ${FirebaseAuth.instance.currentUser?.email}");
+  }
+
+  Future<bool> UserLogin() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi) {
+      try {
+        UserCredential _userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: email, password: password);
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: ((context) => HomePage())),
+            (route) => false);
+        return true;
+      } catch (error) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text(
+                  "Yanlış email veya şifre",
+                  style: TextStyle(fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+              );
+            });
+        return false;
+      }
+    } else {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("Lütfen internete bağlanın"),
+            );
+          });
+      return false;
+    }
   }
 }

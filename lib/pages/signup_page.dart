@@ -1,4 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cutalk/pages/Homepage.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage extends StatelessWidget {
@@ -6,10 +10,9 @@ class SignUpPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    late String Username;
-    late String UserSurname;
-    late String Email;
-    late String Password;
+     String? Username =null;
+     String? Email=null;
+     String? Password=null;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -33,6 +36,9 @@ class SignUpPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18.0),
             child: TextFormField(
+              onChanged: (value) {
+                Username = value;
+              },
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validator: (input) {
                 if (input!.length < 2) {
@@ -40,7 +46,7 @@ class SignUpPage extends StatelessWidget {
                 } else {}
               },
               decoration: InputDecoration(
-                  hintText: "Ad",
+                  hintText: "Tam İsim",
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12))),
             ),
@@ -50,25 +56,10 @@ class SignUpPage extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18.0),
-            child: TextFormField(
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validator: (input) {
-                if (input!.length < 2) {
-                  return "Soyad 2 haneden büyük olmalı";
-                } else {}
+            child: TextFormField(keyboardType: TextInputType.emailAddress,
+              onChanged: (value) {
+                Email = value;
               },
-              decoration: InputDecoration(
-                  hintText: "Soyad",
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12))),
-            ),
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18.0),
-            child: TextFormField(
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validator: (input) {
                 if (!EmailValidator.validate(input!)) {
@@ -87,6 +78,9 @@ class SignUpPage extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18.0),
             child: TextFormField(
+              onChanged: (value) {
+                Password = value;
+              },
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validator: (input) {
                 if (input!.length < 6) {
@@ -104,7 +98,32 @@ class SignUpPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () async {
+                  var connectivityResult =
+                      await (Connectivity().checkConnectivity());
+                  if (connectivityResult == ConnectivityResult.mobile ||
+                      connectivityResult == ConnectivityResult.wifi) {
+                    if (Username != null && Username!.length > 1 &&
+                    Email != null && Email!.length>4 && Password != null && Password!.length>5
+                    ) {
+                      SignUp(Username!, Email!, Password!, context);
+                    }else{showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("İsim, mail veya şifre hatalı"),
+                          );
+                        });}
+                  } else {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("Lütfen internete bağlanın"),
+                          );
+                        });
+                  }
+                },
                 child: const Text("Kayıt ol"),
               ),
             ],
@@ -112,5 +131,54 @@ class SignUpPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void SignUp(String username, String email, String password,
+      BuildContext context) async {
+    var _UserDoc = await FirebaseFirestore.instance.collection("user");
+    var _result = await _UserDoc.where("email", isEqualTo: email).get();
+    if (_result.docs.isEmpty) {
+      try {
+        UserCredential _usercredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: password);
+
+        await FirebaseFirestore.instance.collection("user").add({
+          "name": username,
+          "email": email,
+          "password": password,
+          "id": FirebaseAuth.instance.currentUser?.uid
+        });
+        var _MyUser = _usercredential.user;
+        // var _result1 = await _UserDoc.where(email, isEqualTo: "email").get();
+        // FirebaseFirestore.instance
+        //     .collection("user")
+        //     .doc(_result1.docs[0].id)
+        //     .set({"name": username}, SetOptions(merge: true));
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: ((context) => HomePage())),
+            (route) => false);
+        // if (!_MyUser!.emailVerified) {
+        //   await _MyUser.sendEmailVerification();
+        // }
+      } catch (error) {
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(actions: [
+                Text(
+                    "Bu hatayla karşılaştıysanız isim mail ve şifrenizi harf ve rakam dışında karakter içermeyecek şekilde düzeltmeyi deneyin")
+              ]);
+            });
+      }
+    } else {
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text("Mail kullanılıyor"),
+            );
+          });
+    }
   }
 }
