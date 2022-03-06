@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:cutalk/models/Comment.dart';
 import 'package:cutalk/models/Talkmodel.dart';
 import 'package:cutalk/models/Usermodel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,14 +10,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 class ContentPage extends StatefulWidget {
-  ContentPage({
-    Key? key,
-    required this.userid,
-    required this.content,
-  }) : super(key: key);
+  ContentPage(
+      {Key? key,
+      required this.userid,
+      required this.content,
+      required this.currentTalk})
+      : super(key: key);
 
   String? userid;
   String? content;
+  QueryDocumentSnapshot<Object?> currentTalk;
+
   @override
   State<ContentPage> createState() => _ContentPageState();
 }
@@ -22,7 +29,49 @@ class _ContentPageState extends State<ContentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          showModalBottomSheet(
+              context: context,
+              builder: (context) {
+                return Container(
+                  padding: EdgeInsets.only(
+                      bottom: MediaQuery.of(context).viewInsets.bottom),
+                  child: ListTile(
+                    title: TextFormField(
+                      autofocus: true,
+                      onFieldSubmitted: (value) async {
+                        var connectivityResult =
+                            await (Connectivity().checkConnectivity());
+                        if (connectivityResult == ConnectivityResult.mobile ||
+                            connectivityResult == ConnectivityResult.wifi) {
+                          var currentDoc = await FirebaseFirestore.instance
+                              .doc("talk/${widget.currentTalk.id}")
+                              .get();
+                          List<dynamic> tempList =
+                              currentDoc.data()!["comments"];
+                          tempList.add(value);
+                          await FirebaseFirestore.instance
+                              .collection("talk")
+                              .doc(widget.currentTalk.id)
+                              .update({
+                            "comments": FieldValue.arrayUnion(tempList)
+                          });
+                          setState(() {});
+                          Navigator.pop(context);
+                        }
+                      },
+                    ),
+                  ),
+                );
+              });
+        },
+        child: Icon(Icons.comment),
+      ),
+      appBar: AppBar(
+        centerTitle: true,
+        title: const Text("Konuşma"),
+      ),
       body: Column(
         mainAxisSize: MainAxisSize.max,
         children: [
@@ -43,6 +92,7 @@ class _ContentPageState extends State<ContentPage> {
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 return CircleAvatar(
+                                    backgroundColor: Colors.transparent,
                                     backgroundImage:
                                         NetworkImage(snapshot.data.toString()));
                               } else {
@@ -90,8 +140,70 @@ class _ContentPageState extends State<ContentPage> {
           ),
           Expanded(
               flex: 8,
-              child: Container(
-                color: Colors.green,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 12.0),
+                      child: Text(
+                        "Yorumlar",
+                        textAlign: TextAlign.start,
+                      ),
+                    ),
+                    Padding(
+                        padding: const EdgeInsets.only(top: 18.0),
+                        child: FutureBuilder(
+                            future: GetCommentList(),
+                            builder: ((context, snapshot) {
+                                if (snapshot.hasError) {
+                                return Center(
+                                  child: Text("Yorum yok"),
+                                );
+                              } else if (!snapshot.hasData) {
+                                return Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                                
+                              } else {
+                                var list = snapshot.data as List;
+                                list = list.reversed.toList();
+                                return ListView.separated(
+                                  itemCount: list.length,
+                                  shrinkWrap: true,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  itemBuilder: (context, index) {
+                                    return ListTile(
+                                      leading: FutureBuilder(
+                                        future: GetUserImage(widget.userid),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasData) {
+                                            return CircleAvatar(
+                                                backgroundColor:
+                                                    Colors.transparent,
+                                                backgroundImage: NetworkImage(
+                                                    snapshot.data.toString()));
+                                          } else {
+                                            return Image.asset(
+                                              "assets/images/user_30px.png",
+                                            );
+                                          }
+                                        },
+                                      ),
+                                      title: Text(list[index]),
+                                    );
+                                  },
+                                  separatorBuilder: (context, index) {
+                                    return Divider(
+                                      thickness: 1,
+                                    );
+                                  },
+                                );
+                              }
+                            }))),
+                  ],
+                ),
               ))
         ],
       ),
@@ -108,5 +220,9 @@ class _ContentPageState extends State<ContentPage> {
     var _UserDoc = await FirebaseFirestore.instance.collection("user");
     var _result = await _UserDoc.where("id", isEqualTo: userid).get();
     return _result.docs[0]["imagepath"];
+  }
+
+  Future<List> GetCommentList() async {
+    return widget.currentTalk["comments"];
   }
 }

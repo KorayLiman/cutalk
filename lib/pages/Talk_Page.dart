@@ -36,13 +36,18 @@ class _TalkPageState extends State<TalkPage> {
                           if (value.length > 0) {
                             var newTalk = Talk.create(
                                 Content: value,
+                                timestamp: DateTime.now(),
+                                
                                 Ownerid:
                                     FirebaseAuth.instance.currentUser?.uid);
+                           
+                            
                             print(FirebaseAuth.instance.currentUser?.uid);
                             FirebaseFirestore.instance.collection("talk").add({
                               "content": newTalk.Content,
                               "ownerid": newTalk.ownerid,
-                              "timestamp": DateTime.now()
+                              "timestamp": DateTime.now(),
+                              "comments": FieldValue.arrayUnion([])
                             });
                             Navigator.pop(context);
                           } else {
@@ -115,9 +120,9 @@ class _TalkPageState extends State<TalkPage> {
                                     context,
                                     MaterialPageRoute(
                                         builder: ((context) => ContentPage(
-                                              content: docs[index]["content"],
-                                              userid: docs[index]["ownerid"],
-                                            ))));
+                                            content: docs[index]["content"],
+                                            userid: docs[index]["ownerid"],
+                                            currentTalk: docs[index]))));
                               },
                               onLongPress: () async {
                                 var connectivityResult =
