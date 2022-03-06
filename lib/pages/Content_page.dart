@@ -45,19 +45,13 @@ class _ContentPageState extends State<ContentPage> {
                             await (Connectivity().checkConnectivity());
                         if (connectivityResult == ConnectivityResult.mobile ||
                             connectivityResult == ConnectivityResult.wifi) {
-                          var currentDoc = await FirebaseFirestore.instance
-                              .doc("talk/${widget.currentTalk.id}")
-                              .get();
-                          List<dynamic> tempList =
-                              currentDoc.data()!["comments"];
-                          tempList.add(value);
-                          await FirebaseFirestore.instance
-                              .collection("talk")
-                              .doc(widget.currentTalk.id)
-                              .update({
-                            "comments": FieldValue.arrayUnion(tempList)
+                          FirebaseFirestore.instance
+                              .collection("comments")
+                              .add({
+                            "ownerid": widget.currentTalk.id,
+                            "timestamp": DateTime.now(),
+                            "content": value
                           });
-                          setState(() {});
                           Navigator.pop(context);
                         }
                       },
@@ -154,54 +148,45 @@ class _ContentPageState extends State<ContentPage> {
                     ),
                     Padding(
                         padding: const EdgeInsets.only(top: 18.0),
-                        child: FutureBuilder(
-                            future: GetCommentList(),
-                            builder: ((context, snapshot) {
-                                if (snapshot.hasError) {
-                                return Center(
-                                  child: Text("Yorum yok"),
-                                );
-                              } else if (!snapshot.hasData) {
-                                return Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                                
-                              } else {
-                                var list = snapshot.data as List;
-                                list = list.reversed.toList();
-                                return ListView.separated(
-                                  itemCount: list.length,
-                                  shrinkWrap: true,
+                        child: StreamBuilder<QuerySnapshot>(
+                          builder: ((context, snapshot) {
+                            if (snapshot.hasError) {
+                              var er = snapshot.error.toString;
+                              print(er);
+                              return Center(
+                                  child: Text(snapshot.error.toString()));
+                            } else if (!snapshot.hasData) {
+                              return Center(
+                                child: CircularProgressIndicator(),
+                              );
+                            } else {
+                              var docs = snapshot.data!.docs;
+
+                              return ListView.separated(
                                   physics: NeverScrollableScrollPhysics(),
-                                  itemBuilder: (context, index) {
+                                  shrinkWrap: true,
+                                  itemBuilder: ((context, index) {
                                     return ListTile(
-                                      leading: FutureBuilder(
-                                        future: GetUserImage(widget.userid),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.hasData) {
-                                            return CircleAvatar(
-                                                backgroundColor:
-                                                    Colors.transparent,
-                                                backgroundImage: NetworkImage(
-                                                    snapshot.data.toString()));
-                                          } else {
-                                            return Image.asset(
-                                              "assets/images/user_30px.png",
-                                            );
-                                          }
-                                        },
-                                      ),
-                                      title: Text(list[index]),
+                                      title: Text(
+                                          docs[index]["content"].toString()),
                                     );
-                                  },
+                                  }),
                                   separatorBuilder: (context, index) {
                                     return Divider(
                                       thickness: 1,
                                     );
                                   },
-                                );
-                              }
-                            }))),
+                                  itemCount: docs.length);
+                            }
+                          }),
+                          stream: FirebaseFirestore.instance
+                              .collection("comments")
+                              .where("ownerid",
+                                  isEqualTo: widget.currentTalk.id)
+                              .orderBy("timestamp", descending: true)
+                              .limit(100)
+                              .snapshots(),
+                        )),
                   ],
                 ),
               ))
