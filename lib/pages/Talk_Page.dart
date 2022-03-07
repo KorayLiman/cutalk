@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cutalk/models/Talkmodel.dart';
@@ -37,6 +38,7 @@ class _TalkPageState extends State<TalkPage> {
                             var newTalk = Talk.create(
                                 Content: value,
                                 timestamp: DateTime.now(),
+                                ViewCount: 0,
                                 Ownerid:
                                     FirebaseAuth.instance.currentUser?.uid);
 
@@ -45,7 +47,8 @@ class _TalkPageState extends State<TalkPage> {
                               "content": newTalk.Content,
                               "ownerid": newTalk.ownerid,
                               "timestamp": DateTime.now(),
-                              "comments": FieldValue.arrayUnion([])
+                              "comments": FieldValue.arrayUnion([]),
+                              "viewcount": 0
                             });
                             Navigator.pop(context);
                           } else {
@@ -83,124 +86,263 @@ class _TalkPageState extends State<TalkPage> {
             } else {
               var docs = snapshot.data!.docs;
               return ListView.builder(
-                  itemExtent: 120,
+                  itemExtent: 190,
                   itemCount: docs.length,
                   itemBuilder: (context, index) {
                     Timestamp t = docs[index]["timestamp"];
+
                     return Padding(
-                      padding:
-                          const EdgeInsets.only(top: 12.0, right: 10, left: 10),
-                      child: Card(
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18)),
-                        elevation: 8,
-                        child: Stack(
-                          children: [
-                            ListTile(
-                              contentPadding:
-                                  EdgeInsets.only(top: 20, bottom: 10, left: 5),
-                              leading:
-                                  Image.asset("assets/images/discussion.png"),
-                              // trailing: DefaultTextStyle.merge(
-                              //     child: Text(formatter.format(
-                              //         DateTime.fromMillisecondsSinceEpoch(
-                              //             docs[index]["timestamp"])))),
-                              title: Text(
-                                docs[index]["content"],
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 2,
-                                style: TextStyle(fontSize: 18),
+                      padding: const EdgeInsets.all(8.0),
+                      child: GestureDetector(
+                        onTap: (() async {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: ((context) => ContentPage(
+                                      content: docs[index]["content"],
+                                      userid: docs[index]["ownerid"],
+                                      currentTalk: docs[index]))));
+                          await FirebaseFirestore.instance
+                              .doc("talk/${docs[index].id}")
+                              .set({"viewcount": FieldValue.increment(1)},
+                                  SetOptions(merge: true));
+                        }),
+                        child: Material(
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: FutureBuilder(
+                                      future:
+                                          GetUserImage(docs[index]["ownerid"]),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.hasData) {
+                                          return CircleAvatar(
+                                              backgroundColor:
+                                                  Colors.transparent,
+                                              backgroundImage: NetworkImage(
+                                                  snapshot.data.toString()));
+                                        } else {
+                                          return Image.asset(
+                                            "assets/images/user_30px.png",
+                                          );
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      FutureBuilder(
+                                          future:
+                                              GetName(docs[index]["ownerid"]),
+                                          builder: (context, snapshot) {
+                                            return Text(
+                                                snapshot.data.toString());
+                                          }),
+                                      DefaultTextStyle.merge(
+                                          child: Text(formatter.format(DateTime
+                                              .fromMillisecondsSinceEpoch(t
+                                                  .toDate()
+                                                  .millisecondsSinceEpoch))))
+                                    ],
+                                  )
+                                ],
                               ),
-
-                              trailing: Icon(Icons.arrow_forward_ios),
-                              onTap: () {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: ((context) => ContentPage(
-                                            content: docs[index]["content"],
-                                            userid: docs[index]["ownerid"],
-                                            currentTalk: docs[index]))));
-                              },
-                              onLongPress: () async {
-                                var connectivityResult =
-                                    await (Connectivity().checkConnectivity());
-                                if (connectivityResult ==
-                                        ConnectivityResult.mobile ||
-                                    connectivityResult ==
-                                        ConnectivityResult.wifi) {
-                                  if (docs[index]["ownerid"] ==
-                                      FirebaseAuth.instance.currentUser?.uid) {
-                                    showMenu(
-                                        context: context,
-                                        position: RelativeRect.fromLTRB(
-                                            0,
-                                            MediaQuery.of(context).size.height,
-                                            MediaQuery.of(context).size.width,
-                                            0),
-                                        items: [
-                                          PopupMenuItem(
-                                              child: TextButton.icon(
-                                                  onPressed: () async {
-                                                    QuerySnapshot<
-                                                            Map<String,
-                                                                dynamic>> snp =
-                                                        await FirebaseFirestore
-                                                            .instance
-                                                            .collection(
-                                                                "comments")
-                                                            .where("ownerid",
-                                                                isEqualTo:
-                                                                    docs[index]
-                                                                        .id)
-                                                            .get();
-                                                    snp.docs.forEach((element) {
-                                                      element.reference
-                                                          .delete();
-                                                    });
-
-                                                    await FirebaseFirestore
-                                                        .instance
-                                                        .runTransaction((Transaction
-                                                            myTransaction) async {
-                                                      await myTransaction
-                                                          .delete(snapshot
-                                                              .data!
-                                                              .docs[index]
-                                                              .reference);
-                                                      Navigator.pop(context);
-                                                    });
-                                                  },
-                                                  icon: Icon(Icons.delete),
-                                                  label: const Text(
-                                                      "Gönderiyi sil")))
-                                        ]);
-                                  }
-                                }
-                              },
-                            ),
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: DefaultTextStyle.merge(
-                                    child: Text(formatter.format(
-                                        DateTime.fromMillisecondsSinceEpoch(t
-                                            .toDate()
-                                            .millisecondsSinceEpoch)))),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20.0),
+                                child: AutoSizeText(
+                                  docs[index]["content"],
+                                  maxLines: 4,
+                                  minFontSize: 16,
+                                  maxFontSize: 18,
+                                  style: TextStyle(
+                                    overflow: TextOverflow.ellipsis,
+                                    fontSize: 24,
+                                  ),
+                                ),
                               ),
-                            )
-                          ],
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(right: 16.0),
+                                  child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 0.0),
+                                          child: TextButton.icon(
+                                              onPressed: () {},
+                                              icon: Icon(
+                                                Icons.comment,
+                                                color: Colors.black,
+                                              ),
+                                              label: const Text(
+                                                "hello",
+                                                style: TextStyle(
+                                                    color: Colors.black),
+                                              )),
+                                        ),
+                                        Padding(
+                                          padding:
+                                              const EdgeInsets.only(top: 0.0),
+                                          child: TextButton.icon(
+                                            icon: Icon(
+                                              Icons.remove_red_eye,
+                                              color: Colors.black,
+                                            ),
+                                            label: Text(
+                                                docs[index]["viewcount"]
+                                                    .toString(),
+                                                style: TextStyle(
+                                                    color: Colors.black)),
+                                            onPressed: () {},
+                                          ),
+                                        ),
+                                      ]),
+                                ),
+                              )
+                            ],
+                          ),
                         ),
                       ),
                     );
+                    // return Padding(
+                    //   padding:
+                    //       const EdgeInsets.only(top: 12.0, right: 10, left: 10),
+                    //   child: Card(
+                    //     shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(18)),
+                    //     elevation: 8,
+                    //     child: Stack(
+                    //       children: [
+                    //         ListTile(
+                    //           contentPadding:
+                    //               EdgeInsets.only(top: 20, bottom: 10, left: 5),
+                    //           leading:
+                    //               Image.asset("assets/images/discussion.png"),
+                    // trailing: DefaultTextStyle.merge(
+                    //     child: Text(formatter.format(
+                    //         DateTime.fromMillisecondsSinceEpoch(
+                    //             docs[index]["timestamp"])))),
+                    //           title: Text(
+                    //             docs[index]["content"],
+                    //             overflow: TextOverflow.ellipsis,
+                    //             maxLines: 2,
+                    //             style: TextStyle(fontSize: 18),
+                    //           ),
+
+                    //           trailing: Icon(Icons.arrow_forward_ios),
+                    //           onTap: () {
+                    //             Navigator.push(
+                    //                 context,
+                    //                 MaterialPageRoute(
+                    //                     builder: ((context) => ContentPage(
+                    //                         content: docs[index]["content"],
+                    //                         userid: docs[index]["ownerid"],
+                    //                         currentTalk: docs[index]))));
+                    //           },
+                    //           onLongPress: () async {
+                    //             var connectivityResult =
+                    //                 await (Connectivity().checkConnectivity());
+                    //             if (connectivityResult ==
+                    //                     ConnectivityResult.mobile ||
+                    //                 connectivityResult ==
+                    //                     ConnectivityResult.wifi) {
+                    //               if (docs[index]["ownerid"] ==
+                    //                   FirebaseAuth.instance.currentUser?.uid) {
+                    //                 showMenu(
+                    //                     context: context,
+                    //                     position: RelativeRect.fromLTRB(
+                    //                         0,
+                    //                         MediaQuery.of(context).size.height,
+                    //                         MediaQuery.of(context).size.width,
+                    //                         0),
+                    //                     items: [
+                    //                       PopupMenuItem(
+                    //                           child: TextButton.icon(
+                    //                               onPressed: () async {
+                    //                                 QuerySnapshot<
+                    //                                         Map<String,
+                    //                                             dynamic>> snp =
+                    //                                     await FirebaseFirestore
+                    //                                         .instance
+                    //                                         .collection(
+                    //                                             "comments")
+                    //                                         .where("ownerid",
+                    //                                             isEqualTo:
+                    //                                                 docs[index]
+                    //                                                     .id)
+                    //                                         .get();
+                    //                                 snp.docs.forEach((element) {
+                    //                                   element.reference
+                    //                                       .delete();
+                    //                                 });
+
+                    //                                 await FirebaseFirestore
+                    //                                     .instance
+                    //                                     .runTransaction((Transaction
+                    //                                         myTransaction) async {
+                    //                                   await myTransaction
+                    //                                       .delete(snapshot
+                    //                                           .data!
+                    //                                           .docs[index]
+                    //                                           .reference);
+                    //                                   Navigator.pop(context);
+                    //                                 });
+                    //                               },
+                    //                               icon: Icon(Icons.delete),
+                    //                               label: const Text(
+                    //                                   "Gönderiyi sil")))
+                    //                     ]);
+                    //               }
+                    //             }
+                    //           },
+                    //         ),
+                    //         Align(
+                    //           alignment: Alignment.bottomRight,
+                    //           child: Padding(
+                    //             padding: const EdgeInsets.only(right: 8.0),
+                    // child: DefaultTextStyle.merge(
+                    //     child: Text(formatter.format(
+                    //         DateTime.fromMillisecondsSinceEpoch(t
+                    //             .toDate()
+                    //             .millisecondsSinceEpoch)))),
+                    //           ),
+                    //         )
+                    //       ],
+                    //     ),
+                    //   ),
+                    // );
                   });
             }
           },
         ));
   }
-}
 
+  GetUserImage(String? userid) async {
+    var _UserDoc = await FirebaseFirestore.instance.collection("user");
+    var _result = await _UserDoc.where("id", isEqualTo: userid).get();
+    return _result.docs[0]["imagepath"];
+  }
+
+  Future<String> GetName(String? userid) async {
+    var _UserDoc = await FirebaseFirestore.instance.collection("user");
+    var _result = await _UserDoc.where("id", isEqualTo: userid).get();
+    return _result.docs[0]["name"];
+  }
+}
 // FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
 //         builder: ((BuildContext context,
 //             AsyncSnapshot<DocumentSnapshot<Map<String, dynamic>>> snapshot) {
