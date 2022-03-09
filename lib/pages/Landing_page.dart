@@ -14,8 +14,6 @@ class LandingPage extends StatelessWidget {
       body: Stack(
         children: [
           Container(
-            width: MediaQuery.of(context).size.width,
-            height: MediaQuery.of(context).size.height,
             decoration: BoxDecoration(
                 gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -46,71 +44,69 @@ class LandingPage extends StatelessWidget {
                     SizedBox(
                       height: 30,
                     ),
-                    SingleChildScrollView(
-                      child: StreamBuilder<QuerySnapshot>(
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            var docs = snapshot.data!.docs;
-                            return ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: docs.length > 2 ? 3 : 0,
-                              itemBuilder: (context, index) {
-                                return ListTile(
-                                  onTap: (() async {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: ((context) => ContentPage(
-                                                content: docs[index]["content"],
-                                                userid: docs[index]["ownerid"],
-                                                currentTalk: docs[index]))));
-                                    await FirebaseFirestore.instance
-                                        .doc("talk/${docs[index].id}")
-                                        .set({
-                                      "viewcount": FieldValue.increment(1)
-                                    }, SetOptions(merge: true));
-                                  }),
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.transparent,
-                                    backgroundImage: AssetImage(
-                                        "assets/images/user_40px.png"),
-                                  ),
-                                  title: FutureBuilder(
-                                    future: GetUserName(docs, index),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        return Text(
-                                          snapshot.data.toString(),
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold),
-                                        );
-                                      } else {
-                                        return Text("İsim alınamadı");
-                                      }
-                                    },
-                                  ),
-                                  subtitle: Text(
-                                    docs[index]["content"],
-                                    maxLines: 2,
-                                    style: TextStyle(color: Colors.white),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                );
-                              },
-                            );
-                          } else {
-                            return Text(
-                              "Sohbet Yüklenemedi",
-                            );
-                          }
-                        },
-                        stream: FirebaseFirestore.instance
-                            .collection("talk")
-                            .orderBy("timestamp", descending: true)
-                            .limit(3)
-                            .snapshots(),
-                      ),
+                    StreamBuilder<QuerySnapshot>(
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          var docs = snapshot.data!.docs;
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: docs.length > 2 ? 3 : 0,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                onTap: (() async {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: ((context) => ContentPage(
+                                              content: docs[index]["content"],
+                                              userid: docs[index]["ownerid"],
+                                              currentTalk: docs[index]))));
+                                  await FirebaseFirestore.instance
+                                      .doc("talk/${docs[index].id}")
+                                      .set({
+                                    "viewcount": FieldValue.increment(1)
+                                  }, SetOptions(merge: true));
+                                }),
+                                leading: CircleAvatar(
+                                  backgroundColor: Colors.transparent,
+                                  backgroundImage:
+                                      AssetImage("assets/images/user_40px.png"),
+                                ),
+                                title: FutureBuilder(
+                                  future: GetUserName(docs, index),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      return Text(
+                                        snapshot.data.toString(),
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold),
+                                      );
+                                    } else {
+                                      return Text("İsim alınamadı");
+                                    }
+                                  },
+                                ),
+                                subtitle: Text(
+                                  docs[index]["content"],
+                                  maxLines: 2,
+                                  style: TextStyle(color: Colors.white),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            },
+                          );
+                        } else {
+                          return Text(
+                            "Sohbet Yüklenemedi",
+                          );
+                        }
+                      },
+                      stream: FirebaseFirestore.instance
+                          .collection("talk")
+                          .orderBy("timestamp", descending: true)
+                          .limit(3)
+                          .snapshots(),
                     ),
                   ],
                 ),
@@ -118,17 +114,28 @@ class LandingPage extends StatelessWidget {
             ),
           ),
           Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30))),
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height / 2.5,
+            alignment: Alignment.center,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 28.0),
+              child: Text(
+                "Duyurular",
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
             ),
-          )
+          ),
+          Align(
+              alignment: Alignment.center,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 67.0),
+                child: Container(
+                  width: MediaQuery.of(context).size.width / 1.2,
+                  height: MediaQuery.of(context).size.height / 2.4,
+                  child: Divider(
+                    color: Colors.white,
+                    thickness: 1,
+                  ),
+                ),
+              )),
         ],
       ),
     );

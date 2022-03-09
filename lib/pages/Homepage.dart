@@ -1,3 +1,4 @@
+import 'package:cutalk/pages/Announcements_page.dart';
 import 'package:cutalk/pages/Landing_page.dart';
 import 'package:cutalk/pages/Talk_Page.dart';
 import 'package:cutalk/pages/login_page.dart';
@@ -76,7 +77,7 @@ class _HomePageState extends State<HomePage>
       ),
       body: TabBarView(
           controller: _tabController,
-          children: [LandingPage(), TalkPage(), Container()]),
+          children: [LandingPage(), TalkPage(), AnnouncementsPage()]),
     );
   }
 }
