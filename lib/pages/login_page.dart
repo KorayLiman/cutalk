@@ -213,7 +213,7 @@ class _LoginPageState extends State<LoginPage> {
             //FirestoreOperations.AddUser(googleUser!);
             var uuid = Uuid().v1();
             var name = googleUser?.displayName!;
-            var email = googleUser?.email!;
+            var email = googleUser?.email;
             var imagepath = null;
             user = UserP(
                 id: FirebaseAuth.instance.currentUser?.uid,

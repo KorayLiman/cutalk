@@ -7,7 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
-  
+
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -25,8 +25,37 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      bottomNavigationBar: Container(
+        height: 60,
+        decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+          Color.fromRGBO(74, 0, 224, 1),
+          Color.fromRGBO(142, 45, 226, 1)
+        ])),
+        child: TabBar(controller: _tabController, tabs: [
+          Tab(
+            text: "Anasayfa",
+            iconMargin: EdgeInsets.all(0),
+            icon: Icon(
+              Icons.home,
+            ),
+          ),
+          Tab(
+            icon: Icon(Icons.message),
+            text: "Sohbet",
+            iconMargin: EdgeInsets.all(0),
+          ),
+          Tab(
+            icon: Icon(Icons.announcement),
+            text: "Duyurular",
+            iconMargin: EdgeInsets.all(0),
+          )
+        ]),
+      ),
       drawer: Drawer(),
       appBar: AppBar(
+        backgroundColor: Color.fromRGBO(74, 0, 224, 1),
+        elevation: 0,
         actions: [
           IconButton(
               onPressed: () async {
@@ -44,17 +73,6 @@ class _HomePageState extends State<HomePage>
         ],
         centerTitle: true,
         title: const Text("Cumhuriyet Üniversitesi"),
-        bottom: TabBar(controller: _tabController, tabs: [
-          Tab(
-            child: Icon(
-              Icons.home,
-            ),
-          ),
-          Tab(child: Icon(Icons.message)),
-          Tab(
-            child: Icon(Icons.announcement),
-          )
-        ]),
       ),
       body: TabBarView(
           controller: _tabController,

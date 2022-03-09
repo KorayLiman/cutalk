@@ -39,6 +39,7 @@ class _TalkPageState extends State<TalkPage> {
                                 Content: value,
                                 timestamp: DateTime.now(),
                                 ViewCount: 0,
+                                Commentcount: 0,
                                 Ownerid:
                                     FirebaseAuth.instance.currentUser?.uid);
 
@@ -48,7 +49,8 @@ class _TalkPageState extends State<TalkPage> {
                               "ownerid": newTalk.ownerid,
                               "timestamp": DateTime.now(),
                               "comments": FieldValue.arrayUnion([]),
-                              "viewcount": 0
+                              "viewcount": 0,
+                              "commentcount": 0
                             });
                             Navigator.pop(context);
                           } else {
@@ -94,6 +96,52 @@ class _TalkPageState extends State<TalkPage> {
                     return Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: GestureDetector(
+                        onLongPress: () async {
+                          var connectivityResult =
+                              await (Connectivity().checkConnectivity());
+                          if (connectivityResult == ConnectivityResult.mobile ||
+                              connectivityResult == ConnectivityResult.wifi) {
+                            if (docs[index]["ownerid"] ==
+                                FirebaseAuth.instance.currentUser?.uid) {
+                              showMenu(
+                                  context: context,
+                                  position: RelativeRect.fromLTRB(
+                                      0,
+                                      MediaQuery.of(context).size.height,
+                                      MediaQuery.of(context).size.width,
+                                      0),
+                                  items: [
+                                    PopupMenuItem(
+                                        child: TextButton.icon(
+                                            onPressed: () async {
+                                              QuerySnapshot<
+                                                      Map<String, dynamic>>
+                                                  snp = await FirebaseFirestore
+                                                      .instance
+                                                      .collection("comments")
+                                                      .where("ownerid",
+                                                          isEqualTo:
+                                                              docs[index].id)
+                                                      .get();
+                                              snp.docs.forEach((element) {
+                                                element.reference.delete();
+                                              });
+
+                                              await FirebaseFirestore.instance
+                                                  .runTransaction((Transaction
+                                                      myTransaction) async {
+                                                await myTransaction.delete(
+                                                    snapshot.data!.docs[index]
+                                                        .reference);
+                                                Navigator.pop(context);
+                                              });
+                                            },
+                                            icon: Icon(Icons.delete),
+                                            label: const Text("Gönderiyi sil")))
+                                  ]);
+                            }
+                          }
+                        },
                         onTap: (() async {
                           Navigator.push(
                               context,
@@ -188,8 +236,9 @@ class _TalkPageState extends State<TalkPage> {
                                                 Icons.comment,
                                                 color: Colors.black,
                                               ),
-                                              label: const Text(
-                                                "hello",
+                                              label: Text(
+                                                docs[index]["commentcount"]
+                                                    .toString(),
                                                 style: TextStyle(
                                                     color: Colors.black),
                                               )),
