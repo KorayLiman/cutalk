@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cutalk/pages/Announcements_page.dart';
 import 'package:cutalk/pages/Landing_page.dart';
 import 'package:cutalk/pages/Talk_Page.dart';
@@ -53,11 +54,46 @@ class _HomePageState extends State<HomePage>
           )
         ]),
       ),
-      drawer: Drawer(),
+      drawer: Drawer(
+        child: Column(
+          children: [
+            UserAccountsDrawerHeader(
+                accountName: FutureBuilder(
+                  future: GetUserName(FirebaseAuth.instance.currentUser?.uid),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Text(snapshot.data.toString());
+                    } else {
+                      return Text("İsim alınamadı");
+                    }
+                  },
+                ),
+                accountEmail: Text(FirebaseAuth.instance.currentUser == null
+                    ? "Mail alınamadı"
+                    : FirebaseAuth.instance.currentUser!.email.toString()))
+          ],
+        ),
+      ),
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(74, 0, 224, 1),
         elevation: 0,
         actions: [
+          IconButton(
+              onPressed: () {
+                showAboutDialog(
+                    context: context,
+                    applicationName: "Cü Talk",
+                    applicationVersion: "v1.0",
+                    children: [
+                      // Text("1- Kullanıcılar sohbetlere fotoğraf ekleyebilecek"),
+                      // Text("2- Kullanıcılar profil fotoğraflarını seçebilecek"),
+                      // Text("3- Mail doğrulama getirilecek"),
+                      // Text("4- Duyurular bölümü yapılacak"),
+                      // Text("5- Firestore izinleri düzenlenecek"),
+                      // Text("6- Sohbet ekleme arayüzü iyileştirilecek")
+                    ]);
+              },
+              icon: Icon(Icons.question_mark)),
           IconButton(
               onPressed: () async {
                 if (GoogleSignIn().currentUser != null) {
@@ -79,5 +115,11 @@ class _HomePageState extends State<HomePage>
           controller: _tabController,
           children: [LandingPage(), TalkPage(), AnnouncementsPage()]),
     );
+  }
+
+  GetUserName(String? id) async {
+    var _UserDoc = await FirebaseFirestore.instance.collection("user");
+    var _result = await _UserDoc.where("id", isEqualTo: id).get();
+    return _result.docs[0]["name"];
   }
 }
