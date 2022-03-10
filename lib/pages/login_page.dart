@@ -222,7 +222,10 @@ class _LoginPageState extends State<LoginPage> {
                 imagepath: imagepath,
                 email: email,
                 password: null);
-            _firestore.collection("user").add({
+            _firestore
+                .collection("user")
+                .doc(FirebaseAuth.instance.currentUser?.uid)
+                .set({
               "id": FirebaseAuth.instance.currentUser?.uid,
               "name": name,
               "imagepath": imagepath,

@@ -10,9 +10,9 @@ class SignUpPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-     String? Username =null;
-     String? Email=null;
-     String? Password=null;
+    String? Username = null;
+    String? Email = null;
+    String? Password = null;
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -56,7 +56,8 @@ class SignUpPage extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18.0),
-            child: TextFormField(keyboardType: TextInputType.emailAddress,
+            child: TextFormField(
+              keyboardType: TextInputType.emailAddress,
               onChanged: (value) {
                 Email = value;
               },
@@ -103,17 +104,22 @@ class SignUpPage extends StatelessWidget {
                       await (Connectivity().checkConnectivity());
                   if (connectivityResult == ConnectivityResult.mobile ||
                       connectivityResult == ConnectivityResult.wifi) {
-                    if (Username != null && Username!.length > 1 &&
-                    Email != null && Email!.length>4 && Password != null && Password!.length>5
-                    ) {
+                    if (Username != null &&
+                        Username!.length > 1 &&
+                        Email != null &&
+                        Email!.length > 4 &&
+                        Password != null &&
+                        Password!.length > 5) {
                       SignUp(Username!, Email!, Password!, context);
-                    }else{showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("İsim, mail veya şifre hatalı"),
-                          );
-                        });}
+                    } else {
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text("İsim, mail veya şifre hatalı"),
+                            );
+                          });
+                    }
                   } else {
                     showDialog(
                         context: context,
@@ -142,12 +148,17 @@ class SignUpPage extends StatelessWidget {
         UserCredential _usercredential = await FirebaseAuth.instance
             .createUserWithEmailAndPassword(email: email, password: password);
 
-        await FirebaseFirestore.instance.collection("user").add({
+        await FirebaseFirestore.instance
+            .collection("user")
+            .doc(_usercredential.user!.uid)
+            .set({
           "name": username,
           "email": email,
+          "imagepath": null,
           "password": password,
           "id": FirebaseAuth.instance.currentUser?.uid
         });
+
         var _MyUser = _usercredential.user;
         // var _result1 = await _UserDoc.where(email, isEqualTo: "email").get();
         // FirebaseFirestore.instance

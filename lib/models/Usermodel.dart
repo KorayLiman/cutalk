@@ -1,3 +1,6 @@
+import 'package:cross_file/src/types/interface.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 class UserP {
   UserP(
       {required this.id,
@@ -9,4 +12,6 @@ class UserP {
   String? email;
   String? imagepath = "assets/images/user_30px.png";
   String? password;
+
+
 }

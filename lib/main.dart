@@ -1,4 +1,5 @@
 import 'package:cutalk/firebase_options.dart';
+import 'package:cutalk/models/Usermodel.dart';
 import 'package:cutalk/pages/Homepage.dart';
 import 'package:cutalk/pages/Talk_Page.dart';
 import 'package:cutalk/pages/login_page.dart';
@@ -7,6 +8,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterfire_ui/auth.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

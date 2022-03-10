@@ -387,9 +387,10 @@ class _TalkPageState extends State<TalkPage> {
   }
 
   Future<String> GetName(String? userid) async {
-    var _UserDoc = await FirebaseFirestore.instance.collection("user");
-    var _result = await _UserDoc.where("id", isEqualTo: userid).get();
-    return _result.docs[0]["name"];
+    var _UserDoc =
+        await FirebaseFirestore.instance.collection("user").doc(userid).get();
+
+    return _UserDoc["name"];
   }
 }
 // FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
