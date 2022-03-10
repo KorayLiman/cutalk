@@ -54,7 +54,7 @@ class _LoginPageState extends State<LoginPage> {
                   alignment: Alignment.center,
                   height: 60,
                   child: AutoSizeText(
-                    "CU Talk",
+                    "CÜ Talk",
                     minFontSize: 12,
                     maxFontSize: 28,
                     textAlign: TextAlign.center,
@@ -78,7 +78,8 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 48.0),
-                  child: TextFormField(keyboardType: TextInputType.emailAddress,
+                  child: TextFormField(
+                    keyboardType: TextInputType.emailAddress,
                     onChanged: (value) {
                       email = value;
                     },
