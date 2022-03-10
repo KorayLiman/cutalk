@@ -6,8 +6,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class SignUpPage extends StatelessWidget {
-  const SignUpPage({Key? key}) : super(key: key);
-
+  SignUpPage({Key? key}) : super(key: key);
+  bool IsTappable = true;
   @override
   Widget build(BuildContext context) {
     String? Username = null;
@@ -100,34 +100,38 @@ class SignUpPage extends StatelessWidget {
             children: [
               ElevatedButton(
                 onPressed: () async {
-                  var connectivityResult =
-                      await (Connectivity().checkConnectivity());
-                  if (connectivityResult == ConnectivityResult.mobile ||
-                      connectivityResult == ConnectivityResult.wifi) {
-                    if (Username != null &&
-                        Username!.length > 1 &&
-                        Email != null &&
-                        Email!.length > 4 &&
-                        Password != null &&
-                        Password!.length > 5) {
-                      SignUp(Username!, Email!, Password!, context);
+                  if (IsTappable) {
+                    IsTappable = false;
+                    var connectivityResult =
+                        await (Connectivity().checkConnectivity());
+                    if (connectivityResult == ConnectivityResult.mobile ||
+                        connectivityResult == ConnectivityResult.wifi) {
+                      if (Username != null &&
+                          Username!.length > 1 &&
+                          Email != null &&
+                          Email!.length > 4 &&
+                          Password != null &&
+                          Password!.length > 5) {
+                        SignUp(Username!, Email!, Password!, context);
+                      } else {
+                        showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title:
+                                    const Text("İsim, mail veya şifre hatalı"),
+                              );
+                            });
+                      }
                     } else {
                       showDialog(
                           context: context,
                           builder: (context) {
                             return AlertDialog(
-                              title: const Text("İsim, mail veya şifre hatalı"),
+                              title: const Text("Lütfen internete bağlanın"),
                             );
                           });
                     }
-                  } else {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("Lütfen internete bağlanın"),
-                          );
-                        });
                   }
                 },
                 child: const Text("Kayıt ol"),
@@ -165,10 +169,14 @@ class SignUpPage extends StatelessWidget {
         //     .collection("user")
         //     .doc(_result1.docs[0].id)
         //     .set({"name": username}, SetOptions(merge: true));
+        Future.delayed(Duration(seconds: 20), () {
+          IsTappable = true;
+        });
         Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: ((context) => HomePage())),
             (route) => false);
+
         // if (!_MyUser!.emailVerified) {
         //   await _MyUser.sendEmailVerification();
         // }

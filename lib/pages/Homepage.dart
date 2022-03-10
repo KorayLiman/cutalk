@@ -83,7 +83,7 @@ class _HomePageState extends State<HomePage>
                         onTap: () {
                           showModalBottomSheet(
                               context: context,
-                              builder: (context) {
+                              builder: (wcontext) {
                                 return Container(
                                   height: 80,
                                   child: Row(
@@ -127,7 +127,11 @@ class _HomePageState extends State<HomePage>
                           FirebaseAuth.instance.currentUser == null
                               ? "Mail alınamadı"
                               : FirebaseAuth.instance.currentUser!.email
-                                  .toString()))
+                                  .toString())),
+                  ListTile(
+                    leading: Icon(Icons.settings),
+                    title: Text("Kullanıcı ayarları"),
+                  )
                 ],
               ),
             ),
@@ -139,9 +143,11 @@ class _HomePageState extends State<HomePage>
                     onPressed: () {
                       showAboutDialog(
                           context: context,
-                          applicationName: "Cü Talk",
+                          applicationName: "CüTalk",
                           applicationVersion: "v1.0",
                           children: [
+                            Text(
+                                "Kullanıcı fotoğrafınızı ayarlar butonundan avatarınızın üzerine tıklayarak değiştirebilirsiniz")
                             // Text("1- Kullanıcılar sohbetlere fotoğraf ekleyebilecek"),
                             // Text("2- Kullanıcılar profil fotoğraflarını seçebilecek"),
                             // Text("3- Mail doğrulama getirilecek"),
@@ -209,7 +215,7 @@ class _HomePageState extends State<HomePage>
                       currentAccountPicture: GestureDetector(
                         child: CircleAvatar(
                           backgroundImage:
-                              AssetImage("assets/images/user_30px.png"),
+                              AssetImage("assets/images/user_40px.png"),
                           backgroundColor: Colors.transparent,
                         ),
                         onTap: () {
@@ -259,7 +265,11 @@ class _HomePageState extends State<HomePage>
                           FirebaseAuth.instance.currentUser == null
                               ? "Mail alınamadı"
                               : FirebaseAuth.instance.currentUser!.email
-                                  .toString()))
+                                  .toString())),
+                  ListTile(
+                    leading: Icon(Icons.settings),
+                    title: Text("Kullanıcı ayarları"),
+                  )
                 ],
               ),
             ),
@@ -271,9 +281,11 @@ class _HomePageState extends State<HomePage>
                     onPressed: () {
                       showAboutDialog(
                           context: context,
-                          applicationName: "Cü Talk",
+                          applicationName: "CüTalk",
                           applicationVersion: "v1.0",
                           children: [
+                            Text(
+                                "Kullanıcı fotoğrafınızı ayarlar butonundan avatarınızın üzerine tıklayarak değiştirebilirsiniz")
                             // Text("1- Kullanıcılar sohbetlere fotoğraf ekleyebilecek"),
                             // Text("2- Kullanıcılar profil fotoğraflarını seçebilecek"),
                             // Text("3- Mail doğrulama getirilecek"),
@@ -320,7 +332,17 @@ class _HomePageState extends State<HomePage>
     XFile? image1 = await _picker.pickImage(source: ImageSource.gallery);
 
     image = File(image1!.path);
+    ref = storage
+        .ref()
+        .child(FirebaseAuth.instance.currentUser!.uid)
+        .child("photo.png");
+    var UploadTask = ref.putFile(image!);
+    var url = await (await UploadTask).ref.getDownloadURL();
 
+    FirebaseFirestore.instance
+        .collection("user")
+        .doc(FirebaseAuth.instance.currentUser?.uid)
+        .set({"imagepath": url}, SetOptions(merge: true));
     setState(() {});
   }
 

@@ -8,8 +8,6 @@ import 'package:google_sign_in/google_sign_in.dart';
 class LandingPage extends StatelessWidget {
   const LandingPage({Key? key}) : super(key: key);
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,51 +50,119 @@ class LandingPage extends StatelessWidget {
                               shrinkWrap: true,
                               itemCount: docs.length > 2 ? 3 : 0,
                               itemBuilder: (context, index) {
-                                return ListTile(
-                                  onTap: (() async {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: ((context) => ContentPage(
-                                                content: docs[index]["content"],
-                                                userid: docs[index]["ownerid"],
-                                                currentTalk: docs[index]))));
-                                    await FirebaseFirestore.instance
-                                        .doc("talk/${docs[index].id}")
-                                        .set({
-                                      "viewcount": FieldValue.increment(1)
-                                    }, SetOptions(merge: true));
-                                  }),
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.transparent,
-                                    backgroundImage: AssetImage(
-                                        "assets/images/user_40px.png"),
-                                  ),
-                                  title: FutureBuilder(
-                                    future: GetUserName(docs, index),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.hasData) {
-                                        return Text(
-                                          snapshot.data.toString(),
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold),
+                                return FutureBuilder(
+                                    future: GetImageUrl(docs[index]["ownerid"]),
+                                    builder: (context, snapshow) {
+                                      if (!snapshow.hasData) {
+                                        return ListTile(
+                                          onTap: (() async {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: ((context) =>
+                                                        ContentPage(
+                                                            content: docs[index]
+                                                                ["content"],
+                                                            userid: docs[index]
+                                                                ["ownerid"],
+                                                            currentTalk:
+                                                                docs[index]))));
+                                            await FirebaseFirestore.instance
+                                                .doc("talk/${docs[index].id}")
+                                                .set({
+                                              "viewcount":
+                                                  FieldValue.increment(1)
+                                            }, SetOptions(merge: true));
+                                          }),
+                                          leading: CircleAvatar(
+                                            backgroundColor: Colors.transparent,
+                                            backgroundImage: AssetImage(
+                                                "assets/images/user_40px.png"),
+                                          ),
+                                          title: FutureBuilder(
+                                            future: GetUserName(docs, index),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.hasData) {
+                                                return Text(
+                                                  snapshot.data.toString(),
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                );
+                                              } else {
+                                                return Text(
+                                                  "İsim alınamadı",
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                          subtitle: Text(
+                                            docs[index]["content"],
+                                            maxLines: 2,
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         );
                                       } else {
-                                        return Text(
-                                          "İsim alınamadı",
-                                          style: TextStyle(color: Colors.white),
+                                        return ListTile(
+                                          onTap: (() async {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: ((context) =>
+                                                        ContentPage(
+                                                            content: docs[index]
+                                                                ["content"],
+                                                            userid: docs[index]
+                                                                ["ownerid"],
+                                                            currentTalk:
+                                                                docs[index]))));
+                                            await FirebaseFirestore.instance
+                                                .doc("talk/${docs[index].id}")
+                                                .set({
+                                              "viewcount":
+                                                  FieldValue.increment(1)
+                                            }, SetOptions(merge: true));
+                                          }),
+                                          leading: CircleAvatar(
+                                            backgroundColor: Colors.transparent,
+                                            backgroundImage: NetworkImage(
+                                                snapshow.data.toString()),
+                                          ),
+                                          title: FutureBuilder(
+                                            future: GetUserName(docs, index),
+                                            builder: (context, snapshot) {
+                                              if (snapshot.hasData) {
+                                                return Text(
+                                                  snapshot.data.toString(),
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                );
+                                              } else {
+                                                return Text(
+                                                  "İsim alınamadı",
+                                                  style: TextStyle(
+                                                      color: Colors.white),
+                                                );
+                                              }
+                                            },
+                                          ),
+                                          subtitle: Text(
+                                            docs[index]["content"],
+                                            maxLines: 2,
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
                                         );
                                       }
-                                    },
-                                  ),
-                                  subtitle: Text(
-                                    docs[index]["content"],
-                                    maxLines: 2,
-                                    style: TextStyle(color: Colors.white),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                );
+                                    });
                               },
                             );
                           } else {
@@ -145,6 +211,20 @@ class LandingPage extends StatelessWidget {
                       thickness: 1,
                       color: Colors.white,
                     )),
+              ),
+              Center(
+                  child: Image(
+                image: AssetImage(
+                  "assets/images/construction_40px.png",
+                ),
+              )),
+              Padding(
+                padding: const EdgeInsets.only(top: 58.0),
+                child: Center(
+                    child: Text(
+                  "Duyurular bölümü yapım aşamasındadır",
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                )),
               )
             ],
           ))
@@ -284,5 +364,11 @@ class LandingPage extends StatelessWidget {
     var _result =
         await _UserDoc.where("id", isEqualTo: docs[index]["ownerid"]).get();
     return _result.docs[0]["name"];
+  }
+
+  GetImageUrl(String id) async {
+    var userdoc =
+        await FirebaseFirestore.instance.collection("user").doc(id).get();
+    return userdoc["imagepath"];
   }
 }

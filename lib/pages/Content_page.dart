@@ -101,7 +101,7 @@ class _ContentPageState extends State<ContentPage> {
                                       NetworkImage(snapshot.data.toString()));
                             } else {
                               return Image.asset(
-                                "assets/images/user_30px.png",
+                                "assets/images/user_40px.png",
                               );
                             }
                           },
@@ -194,7 +194,7 @@ class _ContentPageState extends State<ContentPage> {
                                       leading: CircleAvatar(
                                         backgroundColor: Colors.transparent,
                                         backgroundImage: AssetImage(
-                                            "assets/images/user_30px.png"),
+                                            "assets/images/user_40px.png"),
                                       ),
                                       title: FutureBuilder(
                                         future: GetCommentUserName(docs, index),

@@ -30,6 +30,7 @@ class _LoginPageState extends State<LoginPage> {
   late UserP user;
   late String password;
   late String email;
+  bool IsTappable = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -126,20 +127,29 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         TextButton.icon(
                           onPressed: () async {
-                            bool result = await UserLogin();
+                            if (IsTappable) {
+                              IsTappable = false;
+                              bool result = await UserLogin();
+                            }
                           },
                           icon: Icon(Icons.login),
                           label: const Text("Giriş Yap"),
                         ),
                         TextButton.icon(
                             onPressed: () async {
-                              bool result = await GoogleLogin();
-                              if (result) {
-                                Navigator.pushAndRemoveUntil(
-                                    context,
-                                    MaterialPageRoute(
-                                        builder: ((context) => HomePage())),
-                                    (route) => false);
+                              if (IsTappable) {
+                                IsTappable = false;
+                                bool result = await GoogleLogin();
+                                if (result) {
+                                  Future.delayed(Duration(seconds: 20), () {
+                                    IsTappable = true;
+                                  });
+                                  Navigator.pushAndRemoveUntil(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: ((context) => HomePage())),
+                                      (route) => false);
+                                }
                               }
                             },
                             icon: Image.asset(
@@ -270,6 +280,9 @@ class _LoginPageState extends State<LoginPage> {
       try {
         UserCredential _userCredential = await FirebaseAuth.instance
             .signInWithEmailAndPassword(email: email, password: password);
+        Future.delayed(Duration(seconds: 20), () {
+          IsTappable = true;
+        });
         Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: ((context) => HomePage())),
