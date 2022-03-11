@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:cutalk/models/Usermodel.dart';
+import 'package:cutalk/pages/Settings_page.dart';
 import 'package:path/path.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:provider/provider.dart';
@@ -83,7 +84,7 @@ class _HomePageState extends State<HomePage>
                         onTap: () {
                           showModalBottomSheet(
                               context: context,
-                              builder: (wcontext) {
+                              builder: (context) {
                                 return Container(
                                   height: 80,
                                   child: Row(
@@ -130,6 +131,13 @@ class _HomePageState extends State<HomePage>
                                   .toString())),
                   ListTile(
                     leading: Icon(Icons.settings),
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SettingsPage(),
+                          ));
+                    },
                     title: Text("Kullanıcı ayarları"),
                   )
                 ],
@@ -268,6 +276,13 @@ class _HomePageState extends State<HomePage>
                                   .toString())),
                   ListTile(
                     leading: Icon(Icons.settings),
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SettingsPage(),
+                          ));
+                    },
                     title: Text("Kullanıcı ayarları"),
                   )
                 ],

@@ -1,4 +1,7 @@
 import 'dart:io';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cutalk/pages/FullScreenImage.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -8,6 +11,7 @@ import 'package:cutalk/models/Usermodel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 class ContentPage extends StatefulWidget {
@@ -28,7 +32,11 @@ class ContentPage extends StatefulWidget {
 
 class _ContentPageState extends State<ContentPage> {
   final DateFormat formatter = DateFormat('dd/MM/yyyy');
-
+  File? image;
+  late firebase_storage.Reference ref;
+  final ImagePicker _picker = ImagePicker();
+  firebase_storage.FirebaseStorage storage =
+      firebase_storage.FirebaseStorage.instance;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,6 +80,15 @@ class _ContentPageState extends State<ContentPage> {
         child: Icon(Icons.comment),
       ),
       appBar: AppBar(
+        actions: [
+          IconButton(
+              onPressed: () {
+                if (widget.userid == FirebaseAuth.instance.currentUser?.uid) {
+                  PickImages();
+                }
+              },
+              icon: Icon(Icons.photo))
+        ],
         centerTitle: true,
         title: const Text("Konuşma"),
       ),
@@ -142,6 +159,62 @@ class _ContentPageState extends State<ContentPage> {
                     widget.content.toString(),
                     textAlign: TextAlign.start,
                   ),
+                ),
+              )),
+          Expanded(
+              flex: 2,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    FutureBuilder(
+                        future: GetUrl1(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          FullScreenImage(snapshot: snapshot),
+                                    ));
+                              },
+                              child: Container(
+                                height: 100,
+                                width: 100,
+                                decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                        image: NetworkImage(
+                                            snapshot.data.toString()))),
+                              ),
+                            );
+                          } else {
+                            return Container(
+                              width: MediaQuery.of(context).size.width,
+                              child: AutoSizeText(
+                                  "Lütfen 1 den fazla resim yüklemeyiniz ve resmi yükledikten sonra sayfayı yenileyiniz"),
+                            );
+                          }
+                        }),
+                    // FutureBuilder(
+                    //     future: GetUrl2(),
+                    //     builder: (context, snapshot) {
+                    //       if (snapshot.hasData) {
+                    //         return Container(
+                    //           height: 100,
+                    //           width: 100,
+                    //           decoration: BoxDecoration(
+                    //               image: DecorationImage(
+                    //                   image: NetworkImage(
+                    //                       snapshot.data.toString()))),
+                    //         );
+                    //       } else {
+                    //         return Text("Resim yok");
+                    //       }
+                    //     })
+                  ],
                 ),
               )),
           Expanded(
@@ -253,5 +326,62 @@ class _ContentPageState extends State<ContentPage> {
     var _result =
         await _CommentDoc.where("id", isEqualTo: docs[index]["ownerid"]).get();
     return _result.docs[0]["name"].toString();
+  }
+
+  void PickImages() async {
+    final List<XFile>? image1 = await _picker.pickMultiImage();
+
+    if (image1 != null) {
+      for (int i = 0; i < image1.length; i++) {
+        image = File(image1[i].path);
+        ref = storage.ref().child("talkimages").child(i.toString());
+        var UploadTask = ref.putFile(image!);
+        var url = await (await UploadTask).ref.getDownloadURL();
+        FirebaseFirestore.instance
+            .collection("talk")
+            .doc(widget.currentTalk.id)
+            .set({
+          "images": FieldValue.arrayUnion([url])
+        }, SetOptions(merge: true));
+      }
+    }
+
+    // image = File(image1!.path);
+    // ref = storage
+    //     .ref()
+    //     .child("talkimages")
+    //     .child("photo.png");
+    // var UploadTask = ref.putFile(image!);
+    // var url = await (await UploadTask).ref.getDownloadURL();
+
+    // FirebaseFirestore.instance
+    //     .collection("user")
+    //     .doc(FirebaseAuth.instance.currentUser?.uid)
+    //     .set({"imagepath": url}, SetOptions(merge: true));
+    // setState(() {});
+  }
+
+  GetUrl1() async {
+    var talkdoc = await FirebaseFirestore.instance
+        .collection("talk")
+        .doc(widget.currentTalk.id)
+        .get();
+    if (talkdoc["images"][0] != null) {
+      return talkdoc["images"][0];
+    } else {
+      return "https://media.istockphoto.com/vectors/no-image-available-sign-vector-id922962354?k=20&m=922962354&s=612x612&w=0&h=f-9tPXlFXtz9vg_-WonCXKCdBuPUevOBkp3DQ-i0xqo=";
+    }
+  }
+
+  GetUrl2() async {
+    var talkdoc = await FirebaseFirestore.instance
+        .collection("talk")
+        .doc(widget.currentTalk.id)
+        .get();
+    if (talkdoc["images"][1] != null) {
+      return talkdoc["images"][1];
+    } else {
+      return "https://media.istockphoto.com/vectors/no-image-available-sign-vector-id922962354?k=20&m=922962354&s=612x612&w=0&h=f-9tPXlFXtz9vg_-WonCXKCdBuPUevOBkp3DQ-i0xqo=";
+    }
   }
 }

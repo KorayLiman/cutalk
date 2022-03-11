@@ -49,6 +49,7 @@ class _TalkPageState extends State<TalkPage> {
                               "ownerid": newTalk.ownerid,
                               "timestamp": DateTime.now(),
                               "comments": FieldValue.arrayUnion([]),
+                              "images": FieldValue.arrayUnion([]),
                               "viewcount": 0,
                               "commentcount": 0
                             });
